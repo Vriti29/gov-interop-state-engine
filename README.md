@@ -1,95 +1,129 @@
-# Core Backend Service & DPDP Policy Engine (Member 3)
+# Unified Governance & Interoperability State Engine
 
-Centralized backend service powering authentication, role-based authorization, DPDP Act 2023 consent enforcement, deterministic multi-department workflow tracking, statutory SLA monitoring, and anti-insider security guards.
+[![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3.x-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Spring Security](https://img.shields.io/badge/Spring_Security-Stateless_JWT_%26_RBAC-6DB33F?style=for-the-badge&logo=spring-security&logoColor=white)](https://spring.io/projects/spring-security)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://supabase.com/)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
----
-
-## 1. Tech Stack
-- **Language / Runtime:** Java 17+
-- **Framework:** Spring Boot 3.3.x (Web, Security, Data JPA, Validation)
-- **Security:** Stateless Spring Security, JWT (HMAC-SHA256), RBAC
-- **Database:** PostgreSQL (Hosted on Supabase)
-- **API Documentation:** Springdoc OpenAPI (Swagger UI)
-- **Build Tool:** Maven Wrapper (`./mvnw`)
+A secure, enterprise-grade core backend orchestration service engineered to eliminate public-sector data fragmentation, enforce zero-trust inter-departmental verification, and execute fine-grained consent policy controls aligned with the **Digital Personal Data Protection (DPDP) Act 2023**.
 
 ---
 
-## 2. Overview of Work Done (Member 3 Scope)
-- **Stateless Authentication & RBAC:** Implemented secure JWT-based registration and login flows supporting segregated roles (`CITIZEN`, `OFFICER`, `ADMIN`).
-- **DPDP Act 2023 Compliance:** Built a deterministic consent lifecycle engine (`ACTIVE`, `REVOKED`, `EXPIRED`) with citizen-driven revocation and dynamic field-level data minimization.
-- **Workflow State Machine:** Designed a two-tier orchestration system tracking Identity, Revenue, and Education verifications with safety protections against false citizen rejections during external connector failures.
-- **Statutory 7-Day SLA Monitoring:** Enforced automated temporal deadline checks on applications (`slaBreached: true/false`) for escalations.
-- **Anti-Insider Threat Guards:** Implemented an in-memory 3-strike out-of-jurisdiction lockout, active case association checks, and sliding-window rate limiting (10 req/min).
+## 🏛️ System Architecture
+
+The platform operates as an interoperable **Middleware & Finite State Machine (FSM)** engine connecting Citizen ingress flows, external departmental verification connectors (Identity, Revenue, Education), and Administrative Officer Review queues without requiring legacy database migrations.
+
+              [ Citizen Ingress Flow ]
+                         │
+                         ▼ (Stateless JWT)
+┌───────────────────────────────────────────────────────────┐
+│                SECURITY GATEWAY & RBAC                   │
+│  • JWT Bearer Token Validation (HMAC-SHA256)             │
+│  • Role Authority Guard (CITIZEN / OFFICER / ADMIN)       │
+│  • Privilege Escalation Locks (Public Signup = CITIZEN)   │
+└────────────────────────────┬──────────────────────────────┘
+│
+┌────────────────┴────────────────┐
+▼                                 ▼
+┌─────────────────────────┐       ┌─────────────────────────┐
+│  APPLICATION WORKFLOW   │       │  CONSENT POLICY ENGINE  │
+│         ENGINE          │       │       (DPDP 2023)       │
+│ • State Machine (FSM)   │◄─────►│ • Purpose-Limited Grants│
+│ • Step Verification     │       │ • Selective Disclosure  │
+│ • Review Queue Locking  │       │ • Real-time Pre-checks  │
+└───────────┬─────────────┘       └───────────┬─────────────┘
+│                                 │
+└────────────────┬────────────────┘
+▼
+┌───────────────────────────────────────────────────────────┐
+│        IMMUTABLE AUDIT LOGGER & SUPABASE POSTGRESQL       │
+│  • Non-repudiation timestamps (ISO 8601 UTC)             │
+│  • Relational integrity constraints on status transitions │
+│  • Transaction pooler (Port 6543) connection architecture │
+└───────────────────────────────────────────────────────────┘
+
 
 ---
 
-## 3. Project Directory Structure
+## 🔑 Key Engineering Capabilities
 
-```text
-backend/
-├── src/
-│   ├── main/
-│   │   ├── java/com/interop/backend/
-│   │   │   ├── config/             # Spring Security, OpenAPI Swagger, Web configs
-│   │   │   ├── controller/         # REST Controllers (Auth, Application, Policy)
-│   │   │   ├── dto/                # Request and Response payload objects
-│   │   │   ├── entity/             # JPA Entities (User, Application, Consent, Step)
-│   │   │   ├── repository/         # Spring Data JPA Repositories
-│   │   │   ├── security/           # JWT Token Provider, Filters, UserDetails
-│   │   │   └── service/            # Core State Machine & Policy Engine Logic
-│   │   └── resources/
-│   │       └── application.properties # Supabase DB, JWT, and Server configs
-│   └── test/                       # Unit and Integration test suites
-├── .mvn/wrapper/                   # Maven wrapper binaries
-├── Dockerfile                      # Containerization configuration
-├── mvnw                            # Unix build script
-├── mvnw.cmd                        # Windows build script
-├── pom.xml                         # Project dependencies and plugins
-└── README.md                       # Service documentation
-```
+* **Deterministic Finite State Machine (FSM):** Enforces a strict, non-tamperable verification lifecycle:  
+  `SUBMITTED` $\rightarrow$ `VERIFICATION_IN_PROGRESS` $\rightarrow$ `OFFICER_REVIEW` $\rightarrow$ `APPROVED` / `REJECTED`.  
+  The system prevents officers from taking action on an application until all required departmental steps (`IDENTITY`, `REVENUE`, `EDUCATION`) transition to `COMPLETED`.
+* **DPDP Act (2023) Consent Governance:** Implements field-level selective disclosure and purpose limitation (`SCHOLARSHIP_ELIGIBILITY`). Applications cannot pull external department data without an active, citizen-granted consent record.
+* **Zero-Trust Role-Based Access Control (RBAC):** Configured with custom Spring Security filter chains evaluating JWT claims across `ROLE_CITIZEN`, `ROLE_OFFICER`, and `ROLE_ADMIN` authorities.
+* **Data Freshness Enforcement:** Verifies timestamp validity on academic and income records, rejecting stale cached records before advancing workflow states.
+* **Asynchronous Immutable Audit Ledger:** Captures audit records for policy evaluations, step completions, and administrative decisions to guarantee non-repudiation and forensic accountability.
+
 ---
 
-## 2. Quick Start & Setup
+## 🛠️ Tech Stack
+
+* **Language & Runtime:** Java 17+
+* **Framework:** Spring Boot 3.3.x (Web, Security, Data JPA, Validation)
+* **Security:** Stateless Spring Security, JWT (HMAC-SHA256), BCrypt Password Hashing
+* **Database:** Managed PostgreSQL (Hosted on Supabase via Transaction Pooler)
+* **API Documentation:** OpenAPI 3.0 / Springdoc Swagger UI
+* **Build & Deployment:** Maven Wrapper (`mvnw`), Docker, Render Cloud
+
+---
+
+## 📡 REST API Specifications
+
+### Authentication & Consent Management
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | Public | Authenticates credentials and returns signed JWT with roles |
+| `POST` | `/api/v1/policy/consent/grant` | `CITIZEN` | Records explicit, purpose-limited data sharing consent |
+| `POST` | `/api/v1/policy/check` | Public / Gateway | Pre-checks field-level consent eligibility prior to data fetch |
+| `GET` | `/api/v1/policy/consents/citizen/{id}` | Authenticated | Retrieves active consent grants for a given citizen ID |
+
+### Application Workflow & Verification Pipeline
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/applications` | `CITIZEN` | Submits a new scheme application and initializes workflow steps |
+| `GET` | `/api/v1/applications/{id}/status` | Authenticated | Fetches granular step verification timeline and overall status |
+| `PUT` | `/api/v1/applications/{id}/steps/{department}` | Internal Gateway | Webhook trigger updating step completion (`IDENTITY`, `REVENUE`, `EDUCATION`) |
+| `GET` | `/api/v1/applications/review-queue` | `OFFICER`, `ADMIN` | Fetches applications that have passed all automated verifications |
+| `POST` | `/api/v1/applications/department/review` | `OFFICER`, `ADMIN` | Enacts final decision (`APPROVE` / `REJECT`) and commits audit log |
+
+---
+
+## 🗄️ Database Schema Design
+
+* **`users`:** Manages identity records, BCrypt password hashes, assigned roles (`CITIZEN`, `OFFICER`, `ADMIN`), and administrative jurisdictions.
+* **`applications`:** Tracks scheme references, citizen identifiers, departmental step statuses (`IDENTITY`, `REVENUE`, `EDUCATION`), and the macro `overall_status`.
+* **`consents`:** Manages DPDP policy agreements, provider departments, approved field sets, purposes, and valid lifecycle states (`ACTIVE`, `REVOKED`).
+* **`audit_logs`:** Captures immutable event logs containing actor identities, target departments, action types, and UTC timestamps.
+
+---
+
+## 🚀 Running Locally
 
 ### Prerequisites
-- Java 17 or higher (`java -version`)
-- Internet connection to connect to the shared Supabase cloud database
+* JDK 17 or higher
+* Git
+* PostgreSQL instance or Supabase project credentials
 
-### Database Configuration
-The service is pre-configured to connect to the team's shared Supabase PostgreSQL instance via `src/main/resources/application.properties`:
-- **Host:** `db.sclzhbarirzpyxcdhyze.supabase.co`
-- **Port:** `5432`
-- **Database:** `postgres`
-- **Username:** `postgres`
-- **SSL Mode:** `require`
-- **DDL Auto:** `update` (auto-creates and syncs tables on startup)
+### Steps
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/Vriti29/gov-interop-state-engine.git](https://github.com/Vriti29/gov-interop-state-engine.git)
+   cd gov-interop-state-engine
+Configure Environment Variables:
 
-### Run the Application
-Run the following command from the `backend/` directory:
+Update src/main/resources/application.properties with database and security configurations:
 
-```bash
+Properties
+spring.datasource.url=jdbc:postgresql://<host>:5432/<database>
+spring.datasource.username=<username>
+spring.datasource.password=<password>
+spring.jpa.hibernate.ddl-auto=update
+
+jwt.secret=<your-256-bit-secret-key>
+jwt.expiration=86400000
+Build and Run:
+
+Bash
 ./mvnw clean spring-boot:run
-```
-
-## SWAGGER
-All endpoints, request bodies, and response schemas are interactively documented in Swagger:
-http://localhost:8080/swagger-ui.html
-
-## AUTH
-POST /api/v1/auth/login - Use on frontend / route. Returns JWT token and user role (CITIZEN, OFFICER, ADMIN).
-
-Pass Authorization: Bearer <token> header for all private routes.
-
-## Workflow & Tracking
-POST /api/v1/applications - Submit new citizen application (Starts 7-day SLA).
-
-GET /api/v1/applications/{id}/status - Tracking screen data. Returns step statuses (identityStep, revenueStep, educationStep) and slaBreached: true/false.
-
-PUT /api/v1/applications/{id}/steps/{department}?status=... - Update step status. External failures (FAILED_EXTERNAL, RETRY_PENDING) safely map to WAITING_FOR_DEPARTMENT.
-
-PUT /api/v1/applications/{id}/review?status=APPROVED|REJECTED - Officer review. Final state is permanently frozen.
-
-## DPDP Policy Engine
-POST /api/v1/policy/consent/{id}/revoke - Citizen consent revocation.
-
-POST /api/v1/policy/check - Verifies consent, enforces dynamic data minimization, checks jurisdiction, and applies 3-strike insider threat guards.
